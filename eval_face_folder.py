@@ -119,9 +119,28 @@ if  __name__ == "__main__":
     sims_pos_ls = []
     sims_neg_ls = []
     def preprocess(img):
+        if len(img.shape)==2:
+            img_new = np.zeros((*img.shape, 3),dtype = img.dtype)
+            img_new[...,0] = img
+            img_new[...,1] = img
+            img_new[...,2] = img
+            img = img_new
         h,w,c = img.shape
+        hw = [h,w]
         if h != w:
-            max_length = np.argmax([h,w])
+            max_side_site = np.argmax(hw)
+            max_side_length = max(hw)
+            other_side_site = 1 - max_side_site
+            padding_num = max_side_length - hw[other_side_site]
+            padding_first = padding_num // 2
+            padding_second = padding_num - padding_first
+            img_new = np.zeros((max_side_length, max_side_length, c))
+            if other_side_site == 0:
+                img_new[padding_first:padding_first + h,...] = img
+            else :
+                img_new[:, padding_first:padding_first+w,:] = img
+            img = img_new
+
         img = cv2.resize(img, (112,112))
         img = torchvision.transforms.ToTensor()(img)
         img = img*2-1
